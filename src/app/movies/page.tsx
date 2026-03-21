@@ -134,29 +134,33 @@ export default function MoviesPage() {
       ) : movies.length === 0 ? (
         <p className="text-gray-400">No movies yet. Add your first one!</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col divide-y divide-gray-800">
           {sortedMovies.map((movie) => (
             <div
               key={movie.id}
-              className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-600 transition-colors"
+              className="flex gap-4 py-4 hover:bg-gray-900/50 transition-colors"
             >
-              {movie.picture && (
+              {movie.picture ? (
                 <img
                   src={movie.picture}
                   alt={movie.name}
-                  className="w-full h-48 object-cover"
+                  className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded flex-shrink-0"
                 />
+              ) : (
+                <div className="w-20 h-28 sm:w-24 sm:h-36 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center text-gray-600 text-2xl">
+                  🎬
+                </div>
               )}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-white text-lg leading-tight">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <h3 className="font-semibold text-white text-lg leading-tight truncate">
                     {movie.name}
                   </h3>
                   <ScoreBadge score={movie.score_categories} />
                 </div>
-                <div className="text-sm text-gray-400 space-y-1">
-                  <p>Watched: {formatDate(movie.watch_date)}</p>
-                </div>
+                <p className="text-sm text-gray-400">
+                  Watched: {formatDate(movie.watch_date)}
+                </p>
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => openEdit(movie)}

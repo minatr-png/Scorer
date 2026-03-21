@@ -149,27 +149,31 @@ export default function GamesPage() {
       ) : games.length === 0 ? (
         <p className="text-gray-400">No games yet. Add your first one!</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col divide-y divide-gray-800">
           {sortedGames.map((game) => (
             <div
               key={game.id}
-              className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-600 transition-colors"
+              className="flex gap-4 py-4 hover:bg-gray-900/50 transition-colors"
             >
-              {game.picture && (
+              {game.picture ? (
                 <img
                   src={game.picture}
                   alt={game.name}
-                  className="w-full h-48 object-cover"
+                  className="w-20 h-28 sm:w-24 sm:h-36 object-cover rounded flex-shrink-0"
                 />
+              ) : (
+                <div className="w-20 h-28 sm:w-24 sm:h-36 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center text-gray-600 text-2xl">
+                  🎮
+                </div>
               )}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-white text-lg leading-tight">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <h3 className="font-semibold text-white text-lg leading-tight truncate">
                     {game.name}
                   </h3>
                   <ScoreBadge score={game.score_categories} />
                 </div>
-                <div className="text-sm text-gray-400 space-y-1">
+                <div className="text-sm text-gray-400 space-y-0.5">
                   <p>Started: {formatDate(game.start_date)}</p>
                   <p>Finished: {formatDate(game.finish_date)}</p>
                   {game.left && (
