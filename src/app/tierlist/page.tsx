@@ -8,6 +8,10 @@ import { SCORE_HEX } from "@/lib/constants";
 
 type TierMode = "games" | "movies";
 
+function proxyUrl(url: string) {
+  return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+}
+
 interface TierItem {
   id: string;
   name: string;
@@ -24,6 +28,8 @@ export default function TierListPage() {
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dragItemId, setDragItemId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | "unrated" | null>(null);
   const tierRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -78,6 +84,26 @@ export default function TierListPage() {
 
   const modeLabel = mode === "games" ? "Games" : "Movies";
   const modeEmoji = mode === "games" ? "🎮" : "🎬";
+
+  async function handleDrop(scoreId: number | null) {
+    if (!dragItemId) return;
+    setDragItemId(null);
+    setDropTarget(null);
+
+    const table = mode === "games" ? "games" : "movies";
+    await supabase.from(table).update({ score_id: scoreId }).eq("id", dragItemId);
+
+    // Optimistic update
+    if (mode === "games") {
+      setGames((prev) =>
+        prev.map((g) => (g.id === dragItemId ? { ...g, score_id: scoreId } : g))
+      );
+    } else {
+      setMovies((prev) =>
+        prev.map((m) => (m.id === dragItemId ? { ...m, score_id: scoreId } : m))
+      );
+    }
+  }
 
   async function downloadPng() {
     if (!tierRef.current) return;
@@ -166,6 +192,7 @@ export default function TierListPage() {
 
           {tiers.map(({ category, items: tierItems }) => {
             const hex = SCORE_HEX[category.name] ?? "#6b7280";
+            const isOver = dropTarget === category.id;
             return (
               <div key={category.id} className="flex border-t border-gray-700">
                 <div
@@ -182,16 +209,24 @@ export default function TierListPage() {
                 >
                   {category.name}
                 </div>
-                <div className="flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px]">
+                <div
+                  className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px] transition-colors ${isOver ? "bg-white/10" : ""}`}
+                  onDragOver={(e) => { e.preventDefault(); setDropTarget(category.id); }}
+                  onDragLeave={() => setDropTarget(null)}
+                  onDrop={(e) => { e.preventDefault(); handleDrop(category.id); }}
+                >
                   {tierItems.map((item) => (
                     <div
                       key={item.id}
-                      className="relative group"
+                      className="relative group cursor-grab active:cursor-grabbing"
                       title={item.name}
+                      draggable
+                      onDragStart={() => setDragItemId(item.id)}
+                      onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
                     >
                       {item.picture ? (
                         <img
-                          src={item.picture}
+                          src={proxyUrl(item.picture)}
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded"
                           crossOrigin="anonymous"
@@ -213,16 +248,24 @@ export default function TierListPage() {
               <div className="w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3 bg-gray-700 text-gray-300">
                 Unrated
               </div>
-              <div className="flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px]">
+              <div
+                className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px] transition-colors ${dropTarget === "unrated" ? "bg-white/10" : ""}`}
+                onDragOver={(e) => { e.preventDefault(); setDropTarget("unrated"); }}
+                onDragLeave={() => setDropTarget(null)}
+                onDrop={(e) => { e.preventDefault(); handleDrop(null); }}
+              >
                 {unrated.map((item) => (
                   <div
                     key={item.id}
-                    className="relative group"
+                    className="relative group cursor-grab active:cursor-grabbing"
                     title={item.name}
+                    draggable
+                    onDragStart={() => setDragItemId(item.id)}
+                    onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
                   >
                     {item.picture ? (
                       <img
-                        src={item.picture}
+                        src={proxyUrl(item.picture)}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"
                         crossOrigin="anonymous"

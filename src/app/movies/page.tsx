@@ -206,7 +206,7 @@ export default function MoviesPage() {
             <label className="block text-sm text-gray-300 mb-1">
               Picture URL
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               <input
                 type="url"
                 value={formPicture}
@@ -221,6 +221,37 @@ export default function MoviesPage() {
               >
                 🔍 Search
               </button>
+            </div>
+            <div
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-blue-500"); }}
+              onDragLeave={(e) => { e.currentTarget.classList.remove("border-blue-500"); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("border-blue-500");
+                // Try to extract image src from HTML (e.g. dragging an <img> from a browser)
+                const html = e.dataTransfer.getData("text/html");
+                if (html) {
+                  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+                  if (match?.[1] && match[1].startsWith("http")) {
+                    setFormPicture(match[1].trim());
+                    return;
+                  }
+                }
+                // Fallback to plain URL
+                const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
+                if (url && url.startsWith("http")) setFormPicture(url.trim());
+              }}
+              className="rounded border-2 border-dashed border-gray-700 p-2 text-center transition-colors"
+            >
+              {formPicture ? (
+                <img
+                  src={formPicture}
+                  alt="Preview"
+                  className="max-h-40 mx-auto rounded object-contain"
+                />
+              ) : (
+                <p className="text-xs text-gray-500 py-4">Drag & drop an image here</p>
+              )}
             </div>
           </div>
           <div>
