@@ -16,6 +16,7 @@ export default function MoviesPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [categories, setCategories] = useState<ScoreCategory[]>([]);
   const [sortBy, setSortBy] = useState<MovieSort>("watch_date");
+  const [sortAsc, setSortAsc] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,13 +52,15 @@ export default function MoviesPage() {
   }, [fetchCategories, fetchMovies]);
 
   const sortedMovies = [...movies].sort((a, b) => {
+    let result = 0;
     if (sortBy === "watch_date") {
-      return new Date(b.watch_date).getTime() - new Date(a.watch_date).getTime();
+      result = new Date(b.watch_date).getTime() - new Date(a.watch_date).getTime();
+    } else {
+      const aOrder = a.score_categories?.order ?? 0;
+      const bOrder = b.score_categories?.order ?? 0;
+      result = bOrder - aOrder;
     }
-    // score
-    const aOrder = a.score_categories?.order ?? 0;
-    const bOrder = b.score_categories?.order ?? 0;
-    return bOrder - aOrder;
+    return sortAsc ? -result : result;
   });
 
   function resetForm() {
@@ -87,7 +90,7 @@ export default function MoviesPage() {
     const payload = {
       name: formName,
       picture: formPicture,
-      watch_date: formWatchDate,
+      watch_date: /^\d{4}-\d{2}-\d{2}$/.test(formWatchDate) ? formWatchDate : null,
       score_id: formScore,
     };
 
@@ -128,6 +131,8 @@ export default function MoviesPage() {
           ]}
           current={sortBy}
           onChange={setSortBy}
+          ascending={sortAsc}
+          onToggleOrder={() => setSortAsc((v) => !v)}
         />
       </div>
 
@@ -191,7 +196,7 @@ export default function MoviesPage() {
         }}
         title={editingMovie ? "Edit Movie" : "Add Movie"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Name *</label>
             <input

@@ -16,6 +16,7 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [categories, setCategories] = useState<ScoreCategory[]>([]);
   const [sortBy, setSortBy] = useState<GameSort>("start_date");
+  const [sortAsc, setSortAsc] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,19 +54,20 @@ export default function GamesPage() {
   }, [fetchCategories, fetchGames]);
 
   const sortedGames = [...games].sort((a, b) => {
+    let result = 0;
     if (sortBy === "start_date") {
-      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+      result = new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+    } else if (sortBy === "finish_date") {
+      if (!a.finish_date && !b.finish_date) result = 0;
+      else if (!a.finish_date) result = 1;
+      else if (!b.finish_date) result = -1;
+      else result = new Date(b.finish_date).getTime() - new Date(a.finish_date).getTime();
+    } else {
+      const aOrder = a.score_categories?.order ?? 0;
+      const bOrder = b.score_categories?.order ?? 0;
+      result = bOrder - aOrder;
     }
-    if (sortBy === "finish_date") {
-      if (!a.finish_date && !b.finish_date) return 0;
-      if (!a.finish_date) return 1;
-      if (!b.finish_date) return -1;
-      return new Date(b.finish_date).getTime() - new Date(a.finish_date).getTime();
-    }
-    // score
-    const aOrder = a.score_categories?.order ?? 0;
-    const bOrder = b.score_categories?.order ?? 0;
-    return bOrder - aOrder;
+    return sortAsc ? -result : result;
   });
 
   function resetForm() {
@@ -99,8 +101,8 @@ export default function GamesPage() {
     const payload = {
       name: formName,
       picture: formPicture,
-      start_date: formStartDate,
-      finish_date: formFinishDate || null,
+      start_date: /^\d{4}-\d{2}-\d{2}$/.test(formStartDate) ? formStartDate : null,
+      finish_date: (/^\d{4}-\d{2}-\d{2}$/.test(formFinishDate) ? formFinishDate : null) || null,
       left: formLeft,
       score_id: formScore,
     };
@@ -119,6 +121,12 @@ export default function GamesPage() {
   async function handleDelete(id: string) {
     if (!confirm("Delete this game?")) return;
     await supabase.from("games").delete().eq("id", id);
+    fetchGames();
+  }
+
+  async function handleFinish(id: string) {
+    const today = new Date().toISOString().split("T")[0];
+    await supabase.from("games").update({ finish_date: today, left: false }).eq("id", id);
     fetchGames();
   }
 
@@ -143,6 +151,8 @@ export default function GamesPage() {
           ]}
           current={sortBy}
           onChange={setSortBy}
+          ascending={sortAsc}
+          onToggleOrder={() => setSortAsc((v) => !v)}
         />
       </div>
 
@@ -183,6 +193,14 @@ export default function GamesPage() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-3">
+                  {!game.finish_date && (
+                    <button
+                      onClick={() => handleFinish(game.id)}
+                      className="text-xs bg-green-900/50 hover:bg-green-900 text-green-300 px-3 py-1.5 rounded transition-colors"
+                    >
+                      ✓ Finish
+                    </button>
+                  )}
                   <button
                     onClick={() => openEdit(game)}
                     className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-1.5 rounded transition-colors"
@@ -210,7 +228,7 @@ export default function GamesPage() {
         }}
         title={editingGame ? "Edit Game" : "Add Game"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Name *</label>
             <input
