@@ -8,6 +8,7 @@ import ScoreBadge from "@/components/ScoreBadge";
 import ScoreSelect from "@/components/ScoreSelect";
 import SortButtons from "@/components/SortButtons";
 import Modal from "@/components/Modal";
+import CoverSearchModal from "@/components/CoverSearchModal";
 
 type GameSort = "start_date" | "finish_date" | "score";
 
@@ -28,6 +29,7 @@ export default function GamesPage() {
   const [formFinishDate, setFormFinishDate] = useState("");
   const [formLeft, setFormLeft] = useState(false);
   const [formScore, setFormScore] = useState<number | null>(null);
+  const [coverModalOpen, setCoverModalOpen] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     const { data } = await supabase
@@ -223,13 +225,22 @@ export default function GamesPage() {
             <label className="block text-sm text-gray-300 mb-1">
               Picture URL
             </label>
-            <input
-              type="url"
-              value={formPicture}
-              onChange={(e) => setFormPicture(e.target.value)}
-              placeholder="https://..."
-              className="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={formPicture}
+                onChange={(e) => setFormPicture(e.target.value)}
+                placeholder="https://..."
+                className="flex-1 rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setCoverModalOpen(true)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors whitespace-nowrap"
+              >
+                🔍 Search
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -283,6 +294,14 @@ export default function GamesPage() {
           </button>
         </form>
       </Modal>
+
+      <CoverSearchModal
+        open={coverModalOpen}
+        onClose={() => setCoverModalOpen(false)}
+        onSelect={(url) => setFormPicture(url)}
+        initialQuery={formName}
+        type="games"
+      />
     </div>
   );
 }
