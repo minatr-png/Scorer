@@ -17,6 +17,7 @@ export default function MoviesPage() {
   const [categories, setCategories] = useState<ScoreCategory[]>([]);
   const [sortBy, setSortBy] = useState<MovieSort>("watch_date");
   const [sortAsc, setSortAsc] = useState(false);
+  const [filterName, setFilterName] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,9 +25,7 @@ export default function MoviesPage() {
   // Form state
   const [formName, setFormName] = useState("");
   const [formPicture, setFormPicture] = useState("");
-  const [formWatchDate, setFormWatchDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [formWatchDate, setFormWatchDate] = useState("");
   const [formScore, setFormScore] = useState<number | null>(null);
   const [coverModalOpen, setCoverModalOpen] = useState(false);
 
@@ -61,7 +60,9 @@ export default function MoviesPage() {
       result = bOrder - aOrder;
     }
     return sortAsc ? -result : result;
-  });
+  }).filter((movie) =>
+    movie.name.toLowerCase().includes(filterName.toLowerCase())
+  );
 
   function resetForm() {
     setFormName("");
@@ -123,7 +124,7 @@ export default function MoviesPage() {
         </button>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
         <SortButtons<MovieSort>
           options={[
             { value: "watch_date", label: "Watch Date" },
@@ -133,6 +134,13 @@ export default function MoviesPage() {
           onChange={setSortBy}
           ascending={sortAsc}
           onToggleOrder={() => setSortAsc((v) => !v)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by name…"
+          value={filterName}
+          onChange={(e) => setFilterName(e.target.value)}
+          className="rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none sm:ml-auto sm:w-56"
         />
       </div>
 

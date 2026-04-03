@@ -17,6 +17,7 @@ export default function GamesPage() {
   const [categories, setCategories] = useState<ScoreCategory[]>([]);
   const [sortBy, setSortBy] = useState<GameSort>("start_date");
   const [sortAsc, setSortAsc] = useState(false);
+  const [filterName, setFilterName] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,9 +25,7 @@ export default function GamesPage() {
   // Form state
   const [formName, setFormName] = useState("");
   const [formPicture, setFormPicture] = useState("");
-  const [formStartDate, setFormStartDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [formStartDate, setFormStartDate] = useState("");
   const [formFinishDate, setFormFinishDate] = useState("");
   const [formLeft, setFormLeft] = useState(false);
   const [formScore, setFormScore] = useState<number | null>(null);
@@ -68,7 +67,9 @@ export default function GamesPage() {
       result = bOrder - aOrder;
     }
     return sortAsc ? -result : result;
-  });
+  }).filter((game) =>
+    game.name.toLowerCase().includes(filterName.toLowerCase())
+  );
 
   function resetForm() {
     setFormName("");
@@ -142,7 +143,7 @@ export default function GamesPage() {
         </button>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
         <SortButtons<GameSort>
           options={[
             { value: "start_date", label: "Start Date" },
@@ -153,6 +154,13 @@ export default function GamesPage() {
           onChange={setSortBy}
           ascending={sortAsc}
           onToggleOrder={() => setSortAsc((v) => !v)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by name…"
+          value={filterName}
+          onChange={(e) => setFilterName(e.target.value)}
+          className="rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none sm:ml-auto sm:w-56"
         />
       </div>
 
