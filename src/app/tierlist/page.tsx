@@ -5,6 +5,8 @@ import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
 import { Game, Movie, ScoreCategory } from "@/lib/types";
 import { SCORE_HEX } from "@/lib/constants";
+import EditGameModal from "@/components/EditGameModal";
+import EditMovieModal from "@/components/EditMovieModal";
 
 type TierMode = "games" | "movies";
 
@@ -31,6 +33,11 @@ export default function TierListPage() {
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<number | "unrated" | null>(null);
   const tierRef = useRef<HTMLDivElement>(null);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -84,6 +91,16 @@ export default function TierListPage() {
 
   const modeLabel = mode === "games" ? "Games" : "Movies";
   const modeEmoji = mode === "games" ? "🎮" : "🎬";
+
+  function openEditItem(itemId: string) {
+    if (mode === "games") {
+      const found = games.find((g) => g.id === itemId);
+      if (found) { setEditingGame(found); setEditModalOpen(true); }
+    } else {
+      const found = movies.find((m) => m.id === itemId);
+      if (found) { setEditingMovie(found); setEditModalOpen(true); }
+    }
+  }
 
   async function handleDrop(scoreId: number | null) {
     if (!dragItemId) return;
@@ -223,6 +240,7 @@ export default function TierListPage() {
                       draggable
                       onDragStart={() => setDragItemId(item.id)}
                       onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
+                      onDoubleClick={() => openEditItem(item.id)}
                     >
                       {item.picture ? (
                         <img
@@ -262,6 +280,7 @@ export default function TierListPage() {
                     draggable
                     onDragStart={() => setDragItemId(item.id)}
                     onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
+                    onDoubleClick={() => openEditItem(item.id)}
                   >
                     {item.picture ? (
                       <img
@@ -282,6 +301,21 @@ export default function TierListPage() {
           )}
         </div>
       )}
+
+      <EditGameModal
+        open={editModalOpen && mode === "games"}
+        onClose={() => { setEditModalOpen(false); setEditingGame(null); }}
+        game={editingGame}
+        categories={categories}
+        onSaved={fetchData}
+      />
+      <EditMovieModal
+        open={editModalOpen && mode === "movies"}
+        onClose={() => { setEditModalOpen(false); setEditingMovie(null); }}
+        movie={editingMovie}
+        categories={categories}
+        onSaved={fetchData}
+      />
     </div>
   );
 }

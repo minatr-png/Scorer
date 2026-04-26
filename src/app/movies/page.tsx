@@ -5,10 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { Movie, ScoreCategory } from "@/lib/types";
 import { formatDate } from "@/lib/constants";
 import ScoreBadge from "@/components/ScoreBadge";
-import ScoreSelect from "@/components/ScoreSelect";
 import SortButtons from "@/components/SortButtons";
-import Modal from "@/components/Modal";
-import CoverSearchModal from "@/components/CoverSearchModal";
+import EditMovieModal from "@/components/EditMovieModal";
 
 type MovieSort = "watch_date" | "score";
 
@@ -21,13 +19,6 @@ export default function MoviesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Form state
-  const [formName, setFormName] = useState("");
-  const [formPicture, setFormPicture] = useState("");
-  const [formWatchDate, setFormWatchDate] = useState("");
-  const [formScore, setFormScore] = useState<number | null>(null);
-  const [coverModalOpen, setCoverModalOpen] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     const { data } = await supabase
@@ -64,46 +55,14 @@ export default function MoviesPage() {
     movie.name.toLowerCase().includes(filterName.toLowerCase())
   );
 
-  function resetForm() {
-    setFormName("");
-    setFormPicture("");
-    setFormWatchDate(new Date().toISOString().split("T")[0]);
-    setFormScore(null);
-    setEditingMovie(null);
-  }
-
   function openAdd() {
-    resetForm();
+    setEditingMovie(null);
     setModalOpen(true);
   }
 
   function openEdit(movie: Movie) {
     setEditingMovie(movie);
-    setFormName(movie.name);
-    setFormPicture(movie.picture);
-    setFormWatchDate(movie.watch_date);
-    setFormScore(movie.score_id);
     setModalOpen(true);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const payload = {
-      name: formName,
-      picture: formPicture,
-      watch_date: /^\d{4}-\d{2}-\d{2}$/.test(formWatchDate) ? formWatchDate : null,
-      score_id: formScore,
-    };
-
-    if (editingMovie) {
-      await supabase.from("movies").update(payload).eq("id", editingMovie.id);
-    } else {
-      await supabase.from("movies").insert(payload);
-    }
-
-    setModalOpen(false);
-    resetForm();
-    fetchMovies();
   }
 
   async function handleDelete(id: string) {
@@ -196,111 +155,12 @@ export default function MoviesPage() {
         </div>
       )}
 
-      <Modal
+      <EditMovieModal
         open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          resetForm();
-        }}
-        title={editingMovie ? "Edit Movie" : "Add Movie"}
-      >
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">Name *</label>
-            <input
-              type="text"
-              required
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              className="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">
-              Picture URL
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="url"
-                value={formPicture}
-                onChange={(e) => setFormPicture(e.target.value)}
-                placeholder="https://..."
-                className="flex-1 rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => setCoverModalOpen(true)}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors whitespace-nowrap"
-              >
-                🔍 Search
-              </button>
-            </div>
-            <div
-              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-blue-500"); }}
-              onDragLeave={(e) => { e.currentTarget.classList.remove("border-blue-500"); }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.currentTarget.classList.remove("border-blue-500");
-                // Try to extract image src from HTML (e.g. dragging an <img> from a browser)
-                const html = e.dataTransfer.getData("text/html");
-                if (html) {
-                  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-                  if (match?.[1] && match[1].startsWith("http")) {
-                    setFormPicture(match[1].trim());
-                    return;
-                  }
-                }
-                // Fallback to plain URL
-                const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
-                if (url && url.startsWith("http")) setFormPicture(url.trim());
-              }}
-              className="rounded border-2 border-dashed border-gray-700 p-2 text-center transition-colors"
-            >
-              {formPicture ? (
-                <img
-                  src={formPicture}
-                  alt="Preview"
-                  className="max-h-40 mx-auto rounded object-contain"
-                />
-              ) : (
-                <p className="text-xs text-gray-500 py-4">Drag & drop an image here</p>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">
-              Watch Date
-            </label>
-            <input
-              type="date"
-              value={formWatchDate}
-              onChange={(e) => setFormWatchDate(e.target.value)}
-              className="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">Score</label>
-            <ScoreSelect
-              categories={categories}
-              value={formScore}
-              onChange={setFormScore}
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium transition-colors"
-          >
-            {editingMovie ? "Update Movie" : "Add Movie"}
-          </button>
-        </form>
-      </Modal>
-
-      <CoverSearchModal
-        open={coverModalOpen}
-        onClose={() => setCoverModalOpen(false)}
-        onSelect={(url) => setFormPicture(url)}
-        initialQuery={formName}
-        type="movies"
+        onClose={() => setModalOpen(false)}
+        movie={editingMovie}
+        categories={categories}
+        onSaved={fetchMovies}
       />
     </div>
   );
