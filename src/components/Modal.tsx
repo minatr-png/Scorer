@@ -20,8 +20,8 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
+      <div className="bg-gray-900 border border-gray-700 sm:rounded-lg shadow-xl w-full sm:max-w-md max-h-screen sm:max-h-[90vh] overflow-y-auto rounded-t-lg sm:rounded-t-lg">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">{title}</h2>
           <button
