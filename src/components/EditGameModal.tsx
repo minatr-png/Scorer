@@ -13,6 +13,7 @@ interface EditGameModalProps {
   game: Game | null;
   categories: ScoreCategory[];
   onSaved: () => void;
+  initialScoreId?: number | null;
 }
 
 export default function EditGameModal({
@@ -21,6 +22,7 @@ export default function EditGameModal({
   game,
   categories,
   onSaved,
+  initialScoreId,
 }: EditGameModalProps) {
   const [formName, setFormName] = useState("");
   const [formPicture, setFormPicture] = useState("");
@@ -36,11 +38,11 @@ export default function EditGameModal({
     const today = new Date().toISOString().split("T")[0];
     setFormName(game?.name ?? "");
     setFormPicture(game?.picture ?? "");
-    setFormScore(game?.score_id ?? null);
+    setFormScore(game ? game.score_id : (initialScoreId ?? null));
     setFormStartDate(game?.start_date ?? today);
     setFormFinishDate(game?.finish_date ?? "");
     setFormLeft(game?.left ?? false);
-  }, [open, game]);
+  }, [open, game, initialScoreId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

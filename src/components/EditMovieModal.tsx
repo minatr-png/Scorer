@@ -13,6 +13,7 @@ interface EditMovieModalProps {
   movie: Movie | null;
   categories: ScoreCategory[];
   onSaved: () => void;
+  initialScoreId?: number | null;
 }
 
 export default function EditMovieModal({
@@ -21,6 +22,7 @@ export default function EditMovieModal({
   movie,
   categories,
   onSaved,
+  initialScoreId,
 }: EditMovieModalProps) {
   const [formName, setFormName] = useState("");
   const [formPicture, setFormPicture] = useState("");
@@ -34,9 +36,9 @@ export default function EditMovieModal({
     const today = new Date().toISOString().split("T")[0];
     setFormName(movie?.name ?? "");
     setFormPicture(movie?.picture ?? "");
-    setFormScore(movie?.score_id ?? null);
+    setFormScore(movie ? movie.score_id : (initialScoreId ?? null));
     setFormWatchDate(movie?.watch_date ?? today);
-  }, [open, movie]);
+  }, [open, movie, initialScoreId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -39,6 +39,10 @@ export default function TierListPage() {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
 
+  // Create modal state (for double-click on category)
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createCategoryId, setCreateCategoryId] = useState<number | null>(null);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [catRes, gameRes, movieRes] = await Promise.all([
@@ -100,6 +104,11 @@ export default function TierListPage() {
       const found = movies.find((m) => m.id === itemId);
       if (found) { setEditingMovie(found); setEditModalOpen(true); }
     }
+  }
+
+  function openCreateModal(categoryId: number) {
+    setCreateCategoryId(categoryId);
+    setCreateModalOpen(true);
   }
 
   async function handleDrop(scoreId: number | null) {
@@ -213,7 +222,7 @@ export default function TierListPage() {
             return (
               <div key={category.id} className="flex border-t border-gray-700">
                 <div
-                  className="w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3"
+                  className="w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     backgroundColor: hex,
                     color:
@@ -223,6 +232,8 @@ export default function TierListPage() {
                         ? "#fff"
                         : "#000",
                   }}
+                  onDoubleClick={() => openCreateModal(category.id)}
+                  title="Double-click to add new item to this tier"
                 >
                   {category.name}
                 </div>
@@ -315,6 +326,24 @@ export default function TierListPage() {
         movie={editingMovie}
         categories={categories}
         onSaved={fetchData}
+      />
+
+      {/* Create modals (for double-click on category) */}
+      <EditGameModal
+        open={createModalOpen && mode === "games"}
+        onClose={() => { setCreateModalOpen(false); setCreateCategoryId(null); }}
+        game={null}
+        categories={categories}
+        onSaved={fetchData}
+        initialScoreId={createCategoryId}
+      />
+      <EditMovieModal
+        open={createModalOpen && mode === "movies"}
+        onClose={() => { setCreateModalOpen(false); setCreateCategoryId(null); }}
+        movie={null}
+        categories={categories}
+        onSaved={fetchData}
+        initialScoreId={createCategoryId}
       />
     </div>
   );
