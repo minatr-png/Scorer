@@ -29,6 +29,7 @@ export default function EditGameModal({
   const [formFinishDate, setFormFinishDate] = useState("");
   const [formLeft, setFormLeft] = useState(false);
   const [coverModalOpen, setCoverModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -43,21 +44,27 @@ export default function EditGameModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const payload = {
-      name: formName,
-      picture: formPicture,
-      start_date: /^\d{4}-\d{2}-\d{2}$/.test(formStartDate) ? formStartDate : null,
-      finish_date: (/^\d{4}-\d{2}-\d{2}$/.test(formFinishDate) ? formFinishDate : null) || null,
-      left: formLeft,
-      score_id: formScore,
-    };
-    if (game) {
-      await supabase.from("games").update(payload).eq("id", game.id);
-    } else {
-      await supabase.from("games").insert(payload);
+    if (saving) return;
+    setSaving(true);
+    try {
+      const payload = {
+        name: formName,
+        picture: formPicture,
+        start_date: /^\d{4}-\d{2}-\d{2}$/.test(formStartDate) ? formStartDate : null,
+        finish_date: (/^\d{4}-\d{2}-\d{2}$/.test(formFinishDate) ? formFinishDate : null) || null,
+        left: formLeft,
+        score_id: formScore,
+      };
+      if (game) {
+        await supabase.from("games").update(payload).eq("id", game.id);
+      } else {
+        await supabase.from("games").insert(payload);
+      }
+      onClose();
+      onSaved();
+    } finally {
+      setSaving(false);
     }
-    onClose();
-    onSaved();
   }
 
   return (
@@ -155,9 +162,10 @@ export default function EditGameModal({
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium transition-colors"
+            disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 text-white py-2 rounded text-sm font-medium transition-colors"
           >
-            {game ? "Update Game" : "Add Game"}
+            {saving ? "Saving…" : game ? "Update Game" : "Add Game"}
           </button>
         </form>
       </Modal>

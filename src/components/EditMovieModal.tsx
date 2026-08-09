@@ -27,6 +27,7 @@ export default function EditMovieModal({
   const [formScore, setFormScore] = useState<number | null>(null);
   const [formWatchDate, setFormWatchDate] = useState("");
   const [coverModalOpen, setCoverModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -39,19 +40,25 @@ export default function EditMovieModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const payload = {
-      name: formName,
-      picture: formPicture,
-      watch_date: /^\d{4}-\d{2}-\d{2}$/.test(formWatchDate) ? formWatchDate : null,
-      score_id: formScore,
-    };
-    if (movie) {
-      await supabase.from("movies").update(payload).eq("id", movie.id);
-    } else {
-      await supabase.from("movies").insert(payload);
+    if (saving) return;
+    setSaving(true);
+    try {
+      const payload = {
+        name: formName,
+        picture: formPicture,
+        watch_date: /^\d{4}-\d{2}-\d{2}$/.test(formWatchDate) ? formWatchDate : null,
+        score_id: formScore,
+      };
+      if (movie) {
+        await supabase.from("movies").update(payload).eq("id", movie.id);
+      } else {
+        await supabase.from("movies").insert(payload);
+      }
+      onClose();
+      onSaved();
+    } finally {
+      setSaving(false);
     }
-    onClose();
-    onSaved();
   }
 
   return (
@@ -128,9 +135,10 @@ export default function EditMovieModal({
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium transition-colors"
+            disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 text-white py-2 rounded text-sm font-medium transition-colors"
           >
-            {movie ? "Update Movie" : "Add Movie"}
+            {saving ? "Saving…" : movie ? "Update Movie" : "Add Movie"}
           </button>
         </form>
       </Modal>
