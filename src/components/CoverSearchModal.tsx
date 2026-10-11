@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, SearchIcon } from "@/components/Icons";
 
 interface CoverResult {
   id: number;
@@ -84,45 +85,46 @@ export default function CoverSearchModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">
+    <div className="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="modal-panel glass-strong rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/70">
+          <h2 className="text-lg font-semibold text-slate-900">
             Search {type === "games" ? "Game" : "Movie"} Covers
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl leading-none"
+            className="btn btn-glass w-8 h-8"
+            aria-label="Close"
           >
-            ×
+            <CloseIcon size={16} />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-800">
+        <div className="px-5 py-4 border-b border-white/70">
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${type}…`}
-              className="flex-1 rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+              className="input-glass flex-1 min-w-0"
               autoFocus
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+              className="btn btn-primary px-5 py-2 text-sm"
             >
-              {loading ? "…" : "Search"}
+              <SearchIcon size={15} /> {loading ? "…" : "Search"}
             </button>
           </form>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
-            <p className="text-gray-400 text-center py-8">Searching…</p>
+            <p className="text-slate-500 text-center py-8">Searching…</p>
           ) : results.length === 0 && searched ? (
-            <p className="text-gray-400 text-center py-8">No covers found.</p>
+            <p className="text-slate-500 text-center py-8">No covers found.</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
               {results.map((item) => (
@@ -130,19 +132,19 @@ export default function CoverSearchModal({
                   key={item.id}
                   type="button"
                   onClick={() => handleSelect(item.cover)}
-                  className="group text-left rounded overflow-hidden border border-gray-700 hover:border-blue-500 transition-colors"
+                  className="glass glass-hover group text-left rounded-2xl overflow-hidden"
                 >
                   <img
                     src={item.cover}
                     alt={item.title}
                     className="w-full aspect-[2/3] object-cover"
                   />
-                  <div className="p-1.5">
-                    <p className="text-xs text-gray-200 leading-tight truncate group-hover:text-blue-400">
+                  <div className="p-2">
+                    <p className="text-xs font-medium text-slate-800 leading-tight truncate group-hover:text-blue-600">
                       {item.title}
                     </p>
                     {item.year && (
-                      <p className="text-xs text-gray-500">{item.year}</p>
+                      <p className="text-xs text-slate-400">{item.year}</p>
                     )}
                   </div>
                 </button>
@@ -152,23 +154,23 @@ export default function CoverSearchModal({
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 px-4 py-3 border-t border-gray-800">
+          <div className="flex items-center justify-center gap-3 px-5 py-3 border-t border-white/70">
             <button
               onClick={() => search(query, page - 1)}
               disabled={page <= 1 || loading}
-              className="text-sm text-gray-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="btn btn-glass px-4 py-1.5 text-sm"
             >
-              ← Prev
+              <ChevronLeftIcon size={15} /> Prev
             </button>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-slate-500 tabular-nums">
               {page} / {totalPages}
             </span>
             <button
               onClick={() => search(query, page + 1)}
               disabled={page >= totalPages || loading}
-              className="text-sm text-gray-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="btn btn-glass px-4 py-1.5 text-sm"
             >
-              Next →
+              Next <ChevronRightIcon size={15} />
             </button>
           </div>
         )}

@@ -10,7 +10,7 @@ interface ScoreBadgeProps {
 export default function ScoreBadge({ score }: ScoreBadgeProps) {
   if (!score) {
     return (
-      <span className="inline-block px-2 py-1 text-xs rounded bg-gray-700 text-gray-300">
+      <span className="inline-block shrink-0 px-2.5 py-1 text-xs font-medium rounded-full bg-white/60 text-slate-500 border border-white/90 shadow-[inset_0_1px_0_#fff]">
         Unrated
       </span>
     );
@@ -24,7 +24,7 @@ export default function ScoreBadge({ score }: ScoreBadgeProps) {
 
   return (
     <span
-      className={`inline-block px-2 py-1 text-xs font-semibold rounded border ${colors.bg} ${colors.text} ${colors.border}`}
+      className={`gloss inline-block shrink-0 px-2.5 py-1 text-xs font-semibold rounded-full border ${colors.bg} ${colors.text} ${colors.border}`}
     >
       {score.name}
     </span>

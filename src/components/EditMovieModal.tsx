@@ -6,6 +6,8 @@ import { Movie, ScoreCategory } from "@/lib/types";
 import Modal from "@/components/Modal";
 import ScoreSelect from "@/components/ScoreSelect";
 import CoverSearchModal from "@/components/CoverSearchModal";
+import ProxyImageWarning from "@/components/ProxyImageWarning";
+import { ImageIcon, SearchIcon } from "@/components/Icons";
 
 interface EditMovieModalProps {
   open: boolean;
@@ -72,39 +74,39 @@ export default function EditMovieModal({
       >
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Name *</label>
+            <label className="label-glass">Name *</label>
             <input
               type="text"
               required
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
-              className="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+              className="input-glass"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Picture URL</label>
+            <label className="label-glass">Picture URL</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="url"
                 value={formPicture}
                 onChange={(e) => setFormPicture(e.target.value)}
                 placeholder="https://..."
-                className="flex-1 rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                className="input-glass flex-1 min-w-0"
               />
               <button
                 type="button"
                 onClick={() => setCoverModalOpen(true)}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors whitespace-nowrap"
+                className="btn btn-glass px-4 py-2 text-sm"
               >
-                🔍 Search
+                <SearchIcon size={15} /> Search
               </button>
             </div>
             <div
-              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-blue-500"); }}
-              onDragLeave={(e) => { e.currentTarget.classList.remove("border-blue-500"); }}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-blue-400!", "bg-blue-50/60"); }}
+              onDragLeave={(e) => { e.currentTarget.classList.remove("border-blue-400!", "bg-blue-50/60"); }}
               onDrop={(e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove("border-blue-500");
+                e.currentTarget.classList.remove("border-blue-400!", "bg-blue-50/60");
                 const html = e.dataTransfer.getData("text/html");
                 if (html) {
                   const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -113,32 +115,36 @@ export default function EditMovieModal({
                 const url = e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain");
                 if (url && url.startsWith("http")) setFormPicture(url.trim());
               }}
-              className="rounded border-2 border-dashed border-gray-700 p-2 text-center transition-colors"
+              className="rounded-2xl border-2 border-dashed border-blue-200 bg-white/35 p-2 text-center transition-colors"
             >
               {formPicture ? (
-                <img src={formPicture} alt="Preview" className="max-h-40 mx-auto rounded object-contain" />
+                <img src={formPicture} alt="Preview" className="max-h-40 mx-auto rounded-xl object-contain shadow-[0_8px_24px_-8px_rgba(15,27,61,0.4)]" />
               ) : (
-                <p className="text-xs text-gray-500 py-4">Drag & drop an image here</p>
+                <div className="flex flex-col items-center gap-2 py-4 text-slate-400">
+                  <ImageIcon size={26} className="text-blue-300" />
+                  <p className="text-xs">Drag & drop an image here</p>
+                </div>
               )}
             </div>
+            <ProxyImageWarning url={formPicture} />
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Watch Date</label>
+            <label className="label-glass">Watch Date</label>
             <input
               type="date"
               value={formWatchDate}
               onChange={(e) => setFormWatchDate(e.target.value)}
-              className="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+              className="input-glass"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Score</label>
+            <label className="label-glass">Score</label>
             <ScoreSelect categories={categories} value={formScore} onChange={setFormScore} />
           </div>
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 text-white py-2 rounded text-sm font-medium transition-colors"
+            className="btn btn-primary w-full py-2.5 text-sm"
           >
             {saving ? "Saving…" : movie ? "Update Movie" : "Add Movie"}
           </button>

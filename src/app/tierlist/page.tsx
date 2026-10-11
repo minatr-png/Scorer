@@ -7,12 +7,11 @@ import { Game, Movie, ScoreCategory } from "@/lib/types";
 import { SCORE_HEX } from "@/lib/constants";
 import EditGameModal from "@/components/EditGameModal";
 import EditMovieModal from "@/components/EditMovieModal";
+import { DownloadIcon, FilmIcon, GamepadIcon, TrophyIcon } from "@/components/Icons";
+import { useSlidingPill } from "@/components/useSlidingPill";
+import { proxyUrl } from "@/lib/imageProxy";
 
 type TierMode = "games" | "movies";
-
-function proxyUrl(url: string) {
-  return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-}
 
 interface TierItem {
   id: string;
@@ -20,6 +19,31 @@ interface TierItem {
   picture: string;
   score_id: number | null;
   date: string;
+}
+
+const THUMB = "w-16 h-16 rounded-xl ring-2 ring-white transition-transform group-hover:scale-105";
+
+// Falls back to a name tile when the image host blocks the proxy, instead of a broken image (on screen and in the PNG).
+function TierThumb({ item }: { item: TierItem }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+
+  if (!item.picture || failedUrl === item.picture) {
+    return (
+      <div className={`${THUMB} bg-blue-50 flex items-center justify-center overflow-hidden px-1 text-[10px] leading-tight text-slate-600 text-center shadow-[0_6px_16px_-6px_rgba(15,27,61,0.4)]`}>
+        <span className="line-clamp-4">{item.name}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={proxyUrl(item.picture)}
+      alt={item.name}
+      className={`${THUMB} object-cover shadow-[0_6px_16px_-6px_rgba(15,27,61,0.5)]`}
+      crossOrigin="anonymous"
+      onError={() => setFailedUrl(item.picture)}
+    />
+  );
 }
 
 export default function TierListPage() {
@@ -33,6 +57,7 @@ export default function TierListPage() {
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<number | "unrated" | null>(null);
   const tierRef = useRef<HTMLDivElement>(null);
+  const { containerRef: modeRef, pillRef: modePillRef } = useSlidingPill(mode);
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -94,7 +119,7 @@ export default function TierListPage() {
   const unrated = filteredItems.filter((item) => !item.score_id);
 
   const modeLabel = mode === "games" ? "Games" : "Movies";
-  const modeEmoji = mode === "games" ? "🎮" : "🎬";
+  const ModeIcon = mode === "games" ? GamepadIcon : FilmIcon;
 
   function openEditItem(itemId: string) {
     if (mode === "games") {
@@ -135,7 +160,7 @@ export default function TierListPage() {
     if (!tierRef.current) return;
     try {
       const dataUrl = await toPng(tierRef.current, {
-        backgroundColor: "#111827",
+        backgroundColor: "#eef4ff",
         pixelRatio: 2,
       });
       const link = document.createElement("a");
@@ -150,28 +175,30 @@ export default function TierListPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-        <h1 className="text-2xl font-bold text-white">🏆 Tier List</h1>
+        <h1 className="flex items-center text-3xl font-bold tracking-tight">
+          <span className="inline-grid place-items-center w-10 h-10 mr-3 align-middle rounded-2xl bg-gradient-to-b from-blue-400 to-blue-600 text-white shadow-[0_6px_18px_-4px_rgba(37,99,235,0.6),inset_0_1px_0_rgba(255,255,255,0.6)]">
+            <TrophyIcon size={20} />
+          </span>
+          <span className="text-gradient">Tier List</span>
+        </h1>
         <div className="flex gap-3 items-center flex-wrap">
-          <div className="flex rounded overflow-hidden border border-gray-600">
+          <div ref={modeRef} className="glass relative flex rounded-full p-1 gap-1">
+            <span ref={modePillRef} className="pill-indicator" aria-hidden="true" />
             <button
+              data-pill-key="games"
+              aria-current={mode === "games"}
               onClick={() => setMode("games")}
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                mode === "games"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+              className="pill-item px-4 py-1.5 text-sm"
             >
-              🎮 Games
+              <GamepadIcon size={16} /> Games
             </button>
             <button
+              data-pill-key="movies"
+              aria-current={mode === "movies"}
               onClick={() => setMode("movies")}
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                mode === "movies"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+              className="pill-item px-4 py-1.5 text-sm"
             >
-              🎬 Movies
+              <FilmIcon size={16} /> Movies
             </button>
           </div>
           <select
@@ -179,7 +206,7 @@ export default function TierListPage() {
             onChange={(e) =>
               setSelectedYear(e.target.value ? Number(e.target.value) : null)
             }
-            className="rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            className="input-glass w-auto! rounded-full!"
           >
             <option value="">All Years</option>
             {years.map((y) => (
@@ -190,29 +217,29 @@ export default function TierListPage() {
           </select>
           <button
             onClick={downloadPng}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+            className="btn btn-primary px-5 py-2.5 text-sm"
           >
-            ⬇ Download PNG
+            <DownloadIcon size={16} /> Download PNG
           </button>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Loading…</p>
+        <p className="glass rounded-3xl p-8 text-center text-slate-500">Loading…</p>
       ) : filteredItems.length === 0 ? (
-        <p className="text-gray-400">
+        <p className="glass rounded-3xl p-8 text-center text-slate-500">
           No {modeLabel.toLowerCase()} found{selectedYear ? ` for ${selectedYear}` : ""}. Add {modeLabel.toLowerCase()} first!
         </p>
       ) : (
         <div
           ref={tierRef}
-          className="rounded-lg overflow-hidden border border-gray-700"
-          style={{ backgroundColor: "#111827" }}
+          className="rounded-3xl overflow-hidden border border-white p-2 sm:p-3 space-y-2 shadow-[inset_0_1px_0_#fff,0_20px_60px_-20px_rgba(37,99,235,0.35)]"
+          style={{ background: "linear-gradient(160deg, #ffffff 0%, #eef4ff 55%, #dbeafe 100%)" }}
         >
           {/* Title inside the PNG */}
-          <div className="px-4 py-3 text-center">
-            <h2 className="text-xl font-bold text-white">
-              {modeEmoji} {modeLabel} Tier List{selectedYear ? ` — ${selectedYear}` : ""}
+          <div className="px-4 pt-2 pb-1 text-center">
+            <h2 className="inline-flex items-center gap-2 text-xl font-bold tracking-tight text-blue-950">
+              <ModeIcon size={22} className="text-blue-600" /> {modeLabel} Tier List{selectedYear ? ` — ${selectedYear}` : ""}
             </h2>
           </div>
 
@@ -220,9 +247,9 @@ export default function TierListPage() {
             const hex = SCORE_HEX[category.name] ?? "#6b7280";
             const isOver = dropTarget === category.id;
             return (
-              <div key={category.id} className="flex border-t border-gray-700">
+              <div key={category.id} className="flex rounded-2xl overflow-hidden bg-white/70 border border-white shadow-[0_4px_14px_-6px_rgba(30,64,175,0.25)]">
                 <div
-                  className="w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="gloss w-24 sm:w-32 shrink-0 flex items-center justify-center text-center font-bold text-sm px-2 py-3 cursor-pointer hover:brightness-110 transition"
                   style={{
                     backgroundColor: hex,
                     color:
@@ -238,7 +265,7 @@ export default function TierListPage() {
                   {category.name}
                 </div>
                 <div
-                  className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px] transition-colors ${isOver ? "bg-white/10" : ""}`}
+                  className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[72px] transition-colors ${isOver ? "bg-blue-100/80 shadow-[inset_0_0_0_2px_rgba(96,165,250,0.7)]" : ""}`}
                   onDragOver={(e) => { e.preventDefault(); setDropTarget(category.id); }}
                   onDragLeave={() => setDropTarget(null)}
                   onDrop={(e) => { e.preventDefault(); handleDrop(category.id); }}
@@ -253,18 +280,7 @@ export default function TierListPage() {
                       onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
                       onDoubleClick={() => openEditItem(item.id)}
                     >
-                      {item.picture ? (
-                        <img
-                          src={proxyUrl(item.picture)}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded"
-                          crossOrigin="anonymous"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-gray-700 rounded flex items-center justify-center text-xs text-gray-300 text-center px-1">
-                          {item.name}
-                        </div>
-                      )}
+                      <TierThumb item={item} />
                     </div>
                   ))}
                 </div>
@@ -273,12 +289,12 @@ export default function TierListPage() {
           })}
 
           {unrated.length > 0 && (
-            <div className="flex border-t border-gray-700">
-              <div className="w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3 bg-gray-700 text-gray-300">
+            <div className="flex rounded-2xl overflow-hidden bg-white/70 border border-white shadow-[0_4px_14px_-6px_rgba(30,64,175,0.25)]">
+              <div className="gloss w-24 sm:w-32 shrink-0 flex items-center justify-center font-bold text-sm px-2 py-3 bg-slate-300 text-slate-700">
                 Unrated
               </div>
               <div
-                className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[60px] transition-colors ${dropTarget === "unrated" ? "bg-white/10" : ""}`}
+                className={`flex flex-wrap gap-2 p-2 items-center flex-1 min-h-[72px] transition-colors ${dropTarget === "unrated" ? "bg-blue-100/80 shadow-[inset_0_0_0_2px_rgba(96,165,250,0.7)]" : ""}`}
                 onDragOver={(e) => { e.preventDefault(); setDropTarget("unrated"); }}
                 onDragLeave={() => setDropTarget(null)}
                 onDrop={(e) => { e.preventDefault(); handleDrop(null); }}
@@ -293,18 +309,7 @@ export default function TierListPage() {
                     onDragEnd={() => { setDragItemId(null); setDropTarget(null); }}
                     onDoubleClick={() => openEditItem(item.id)}
                   >
-                    {item.picture ? (
-                      <img
-                        src={proxyUrl(item.picture)}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
-                        crossOrigin="anonymous"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-600 rounded flex items-center justify-center text-xs text-gray-300 text-center px-1">
-                        {item.name}
-                      </div>
-                    )}
+                    <TierThumb item={item} />
                   </div>
                 ))}
               </div>

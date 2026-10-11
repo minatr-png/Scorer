@@ -1,77 +1,57 @@
 import Link from "next/link";
+import { SCORE_COLORS } from "@/lib/constants";
+import { ArrowRightIcon, FilmIcon, GamepadIcon, TrophyIcon } from "@/components/Icons";
+
+const sections = [
+  { href: "/games", Icon: GamepadIcon, title: "Games", text: "Track and rank your played games" },
+  { href: "/movies", Icon: FilmIcon, title: "Movies", text: "Track and rank your watched movies" },
+  { href: "/tierlist", Icon: TrophyIcon, title: "Tier List", text: "View and export as PNG" },
+];
 
 export default function Home() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-      <h1 className="text-4xl font-bold mb-4">🎮 Kamis Maker</h1>
-      <p className="text-lg text-gray-400 mb-12 max-w-xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-16 sm:py-24 text-center">
+      <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-700 mb-6">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_10px_2px_rgba(59,130,246,0.8)]" />
+        Your personal rankings
+      </span>
+      <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-5">
+        <span className="text-gradient">Kamis Maker</span>
+      </h1>
+      <p className="text-lg text-slate-600 mb-14 max-w-xl mx-auto">
         Classify and rank your played games and watched movies with custom tier
         categories &mdash; from Red to Platinum.
       </p>
 
-      <div className="grid gap-6 sm:grid-cols-3 max-w-2xl mx-auto">
-        <Link
-          href="/games"
-          className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-blue-500 transition-colors group"
-        >
-          <div className="text-3xl mb-3">🎮</div>
-          <h2 className="text-lg font-semibold group-hover:text-blue-400 transition-colors">
-            Games
-          </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Track and rank your played games
-          </p>
-        </Link>
-
-        <Link
-          href="/movies"
-          className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-blue-500 transition-colors group"
-        >
-          <div className="text-3xl mb-3">🎬</div>
-          <h2 className="text-lg font-semibold group-hover:text-blue-400 transition-colors">
-            Movies
-          </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Track and rank your watched movies
-          </p>
-        </Link>
-
-        <Link
-          href="/tierlist"
-          className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-green-500 transition-colors group"
-        >
-          <div className="text-3xl mb-3">🏆</div>
-          <h2 className="text-lg font-semibold group-hover:text-green-400 transition-colors">
-            Tier List
-          </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            View and export as PNG
-          </p>
-        </Link>
+      <div className="grid gap-5 sm:grid-cols-3 max-w-3xl mx-auto">
+        {sections.map((s) => (
+          <Link
+            key={s.href}
+            href={s.href}
+            className="glass glass-hover rounded-3xl p-6 text-left group"
+          >
+            <div className="grid place-items-center w-12 h-12 rounded-2xl bg-white/70 border border-white text-blue-600 mb-4 shadow-[inset_0_1px_0_#fff,0_6px_18px_-6px_rgba(37,99,235,0.45)]">
+              <s.Icon size={24} />
+            </div>
+            <h2 className="flex items-center gap-1.5 text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+              {s.title} <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-1" />
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">{s.text}</p>
+          </Link>
+        ))}
       </div>
 
-      <div className="mt-16">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+      <div className="glass rounded-3xl mt-16 p-6 max-w-3xl mx-auto">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
           Score Tiers
         </h3>
         <div className="flex flex-wrap gap-2 justify-center">
-          {[
-            { name: "Red", color: "bg-red-600 text-white" },
-            { name: "Yellow", color: "bg-yellow-400 text-black" },
-            { name: "Bronze Yellow", color: "bg-yellow-600 text-white" },
-            { name: "Bronze", color: "bg-amber-700 text-white" },
-            { name: "Silver Bronze", color: "bg-stone-400 text-black" },
-            { name: "Silver", color: "bg-gray-300 text-black" },
-            { name: "Gold Silver", color: "bg-amber-300 text-black" },
-            { name: "Gold", color: "bg-yellow-500 text-black" },
-            { name: "Platinum Gold", color: "bg-cyan-300 text-black" },
-            { name: "Platinum", color: "bg-cyan-100 text-black" },
-          ].map((tier) => (
+          {Object.entries(SCORE_COLORS).map(([name, c]) => (
             <span
-              key={tier.name}
-              className={`px-3 py-1.5 rounded text-xs font-semibold ${tier.color}`}
+              key={name}
+              className={`gloss px-3 py-1.5 rounded-full text-xs font-semibold border ${c.bg} ${c.text} ${c.border}`}
             >
-              {tier.name}
+              {name}
             </span>
           ))}
         </div>
